@@ -1,0 +1,87 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"slices"
+	"strings"
+)
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func word_starts_with(prefix string) func(word string) bool {
+	// Returns a function that checks if a word starts with the given prefix.
+	return func(word string) bool {
+		return strings.HasPrefix(word, prefix)
+	}
+}
+
+func word_ends_with(suffix string) func(word string) bool {
+	// Returns a function that checks if a word ends with the given suffix.
+	return func(word string) bool {
+		return strings.HasSuffix(word, suffix)
+	}
+}
+
+func word_contains(substring string) func(word string) bool {
+	// Returns a function that checks if a word contains the given substring.
+	return func(word string) bool {
+		return strings.Contains(word, substring)
+	}
+}
+
+func word_length_greater_than(length int) func(word string) bool {
+	// Returns a function that checks if a word's length is greater than the given length.
+	return func(word string) bool {
+		return len(word) > length
+	}
+}
+
+func word_length_less_than(length int) func(word string) bool {
+	// Returns a function that checks if a word's length is less than the given length.
+	return func(word string) bool {
+		return len(word) < length
+	}
+}
+
+func word_length_equal_to(length int) func(word string) bool {
+	// Returns a function that checks if a word's length is equal to the given length.
+	return func(word string) bool {
+		return len(word) == length
+	}
+}
+
+func word_contains_more_than_one(letter string) func(word string) bool {
+	// Returns a function that checks if a word contains more than one occurrence of a given letter.
+	return func(word string) bool {
+		return strings.Count(word, letter) > 1
+	}
+}
+
+func main() {
+	raw_words, err := os.ReadFile("words.txt")
+	check(err)
+	words := strings.Split(string(raw_words), "\n")
+
+	predicates := []func(string) bool{
+		word_starts_with("DE"),
+		word_contains("F"),
+	}
+
+	filtered := slices.DeleteFunc(words, func(w string) bool {
+		// Delete words that do not match any of the predicates.
+		for _, pred := range predicates {
+			if !pred(w) {
+				return true
+			}
+		}
+		// All predicates match, so we keep the word.
+		return false
+	})
+
+	fmt.Println(filtered)
+}
