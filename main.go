@@ -34,6 +34,25 @@ func word_contains(substring string) func(word string) bool {
 	}
 }
 
+func word_does_not_contain(substring string) func(word string) bool {
+	// Returns a function that checks if a word does not contain the given substring.
+	return func(word string) bool {
+		return !strings.Contains(word, substring)
+	}
+}
+
+func word_has_double_letter() func(word string) bool {
+	// Returns a function that checks if a word has any double letters.
+	return func(word string) bool {
+		for i := range len(word)-1 {
+			if word[i] == word[i+1] {
+				return true
+			}
+		}
+		return false
+	}
+}
+
 func word_length_greater_than(length int) func(word string) bool {
 	// Returns a function that checks if a word's length is greater than the given length.
 	return func(word string) bool {
