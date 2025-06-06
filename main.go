@@ -44,7 +44,7 @@ func word_does_not_contain(substring string) func(word string) bool {
 func word_has_double_letter() func(word string) bool {
 	// Returns a function that checks if a word has any double letters.
 	return func(word string) bool {
-		for i := range len(word)-1 {
+		for i := range len(word) - 1 {
 			if word[i] == word[i+1] {
 				return true
 			}
@@ -81,6 +81,38 @@ func word_contains_more_than_one(letter string) func(word string) bool {
 	}
 }
 
+func pretty_print(words []string, columns int) string {
+	// Returns the array of words in a three-column formatted string.
+	if len(words) == 0 {
+		fmt.Println("No words found.")
+		return ""
+	}
+
+	max_length := 0
+	for _, word := range words {
+		if len(word) > max_length {
+			max_length = len(word)
+		}
+	}
+
+	rows := (len(words) + columns - 1) / columns // Calculate number of rows needed
+	var sb strings.Builder
+
+	for i := 0; i < rows; i++ {
+		for j := 0; j < columns; j++ {
+			index := i + j*rows
+			if index < len(words) {
+				fmt.Fprintf(&sb, "%-*s ", max_length, words[index])
+			} else {
+				fmt.Fprintf(&sb, "%-*s ", max_length, "")
+			}
+		}
+		sb.WriteString("\n")
+	}
+
+	return sb.String()
+}
+
 func main() {
 	raw_words, err := os.ReadFile("words.txt")
 	check(err)
@@ -102,5 +134,6 @@ func main() {
 		return false
 	})
 
-	fmt.Println(filtered)
+	fmt.Println(pretty_print(filtered, 3))
+	fmt.Println("Total words found:", len(filtered))
 }
