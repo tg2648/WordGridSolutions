@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-rod/rod"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -189,17 +190,17 @@ func parsePredicate(predicate string) func(word string) bool {
 
 func main() {
 
-	// page := rod.New().MustConnect().NoDefaultDevice().MustPage("https://wordgrid.clevergoat.com/")
-	// html := page.MustWaitStable().MustHTML()
+	page := rod.New().MustConnect().NoDefaultDevice().MustPage("https://wordgrid.clevergoat.com/")
+	pageHtml := page.MustWaitStable().MustHTML()
 
-	// err := os.WriteFile("wordgrid.html", []byte(html), 0644)
-
-	raw_html, err := os.ReadFile("wordgrid.html")
+	err := os.WriteFile("wordgrid.html", []byte(pageHtml), 0644)
 	check(err)
-	html_str := string(raw_html)
 
-	// z := html.NewTokenizer(strings.NewReader(html_str))
-	doc, err := html.Parse(strings.NewReader(html_str))
+	// rawHtml, err := os.ReadFile("wordgrid.html")
+	// check(err)
+	// pageHtml := string(rawHtml)
+
+	doc, err := html.Parse(strings.NewReader(pageHtml))
 	check(err)
 
 	var spans []string
