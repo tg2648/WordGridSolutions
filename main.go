@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-rod/rod"
@@ -37,6 +38,13 @@ func wordStartsWith(prefix string) func(word string) bool {
 func wordEndsWith(suffix string) func(word string) bool {
 	return func(word string) bool {
 		return strings.HasSuffix(word, suffix)
+	}
+}
+
+// Returns a function that checks if a word starts with the given prefix and ends with the given suffix.
+func wordStartsAndEndsWith(prefix, suffix string) func(word string) bool {
+	return func(word string) bool {
+		return strings.HasPrefix(word, prefix) && strings.HasSuffix(word, suffix)
 	}
 }
 
@@ -163,8 +171,18 @@ func parsePredicate(predicate string) func(word string) bool {
 	predicate = strings.ToLower(predicate)
 
 	switch {
+	// Starts with X - The word must start with X.
 	case strings.HasPrefix(predicate, "starts with"):
 		return wordStartsWith(strings.TrimPrefix(predicate, "starts with "))
+	// Ends with X - The word must end with X.
+	case strings.HasPrefix(predicate, "ends with"):
+		return wordEndsWith(strings.TrimPrefix(predicate, "ends with "))
+	// Contains the letter X
+	case strings.HasPrefix(predicate, "contains the letter"):
+		letter := strings.TrimSpace(strings.TrimPrefix(predicate, "contains the letter "))
+		return wordContains([]string{letter})
+	// Contains X, Y, Z - Must include each letter anywhere in the word.
+	// Contains XY - Must contain the exact sequence.
 	case strings.HasPrefix(predicate, "contains"):
 		chars := strings.Split(strings.TrimPrefix(predicate, "contains "), ",")
 		for i, c := range chars {
@@ -172,27 +190,77 @@ func parsePredicate(predicate string) func(word string) bool {
 		}
 		// fmt.Println("chars:", chars)
 		return wordContains(chars)
+	// Does not contain X, Y, Z
 	case strings.HasPrefix(predicate, "does not contain"):
 		chars := strings.Split(strings.TrimPrefix(predicate, "does not contain "), ",")
 		for i, c := range chars {
 			chars[i] = strings.TrimSpace(c)
 		}
 		return wordDoesNotContain(chars)
+	// Between X and Y letters
 	case strings.HasPrefix(predicate, "between"):
 		low := 0
 		high := 0
 		fmt.Sscanf(predicate, "between %d and %d letters", &low, &high)
 		return wordLengthBetween(low, high)
+	// Multiple letter X’s - More than one occurrence of X.
+	case strings.HasPrefix(predicate, "multiple letter"):
+		rest := strings.TrimPrefix(predicate, "multiple letter ")
+		letter := strings.TrimSuffix(rest, "'s")
+		return wordContainsMoreThanOne(letter)
+	// Double letter - Includes two identical letters in a row.
+	case predicate == "double letter":
+		return wordHasDoubleLetter()
+	// Starts & ends with X
+	case strings.HasPrefix(predicate, "starts & ends with"):
+		s := strings.TrimPrefix(predicate, "starts & ends with ")
+		return wordStartsAndEndsWith(s, s)
+	// X letters or fewer
+	case strings.HasSuffix(predicate, "letters or fewer"):
+		num, err := strconv.Atoi(strings.TrimSuffix(predicate, " letters or fewer"))
+		check(err)
+		return wordLengthLessThan(num + 1)
+	// X letters or more
+	case strings.HasSuffix(predicate, "letters or more"):
+		num, err := strconv.Atoi(strings.TrimSuffix(predicate, " letters or more"))
+		check(err)
+		return wordLengthGreaterThan(num - 1)
+	// X letter word - The word must have that many letters.
+	case strings.HasSuffix(predicate, "letter word"):
+		num := strings.TrimSuffix(predicate, " letter word")
+		switch num {
+		case "two":
+			return wordLengthEqualsTo(2)
+		case "three":
+			return wordLengthEqualsTo(3)
+		case "four":
+			return wordLengthEqualsTo(4)
+		case "five":
+			return wordLengthEqualsTo(5)
+		case "six":
+			return wordLengthEqualsTo(6)
+		case "seven":
+			return wordLengthEqualsTo(7)
+		case "eight":
+			return wordLengthEqualsTo(8)
+		case "nine":
+			return wordLengthEqualsTo(9)
+		case "ten":
+			return wordLengthEqualsTo(10)
+		default:
+			panic("Cannot parse number: " + num)
+		}
 	default:
 		panic("Cannot parse predicate: " + predicate)
 	}
 }
 
 func main() {
-
+	fmt.Println("Connecting to wordgrid...")
 	page := rod.New().MustConnect().NoDefaultDevice().MustPage("https://wordgrid.clevergoat.com/")
 	pageHtml := page.MustWaitStable().MustHTML()
 
+	fmt.Println("Saving html...")
 	err := os.WriteFile("wordgrid.html", []byte(pageHtml), 0644)
 	check(err)
 
@@ -200,6 +268,7 @@ func main() {
 	// check(err)
 	// pageHtml := string(rawHtml)
 
+	fmt.Println("Parsing html...")
 	doc, err := html.Parse(strings.NewReader(pageHtml))
 	check(err)
 
@@ -210,6 +279,7 @@ func main() {
 		}
 	}
 
+	fmt.Println("Parsing predicates...")
 	columns := make([]Predicate, 3)
 	columns[0] = Predicate{Name: spans[0], Func: parsePredicate(spans[0])}
 	columns[1] = Predicate{Name: spans[1], Func: parsePredicate(spans[1])}
@@ -220,10 +290,12 @@ func main() {
 	rows[1] = Predicate{Name: spans[4], Func: parsePredicate(spans[4])}
 	rows[2] = Predicate{Name: spans[5], Func: parsePredicate(spans[5])}
 
+	fmt.Println("Loading dictionary...")
 	raw_words, err := os.ReadFile("words.txt")
 	check(err)
 	words := strings.Split(string(raw_words), "\n")
 
+	fmt.Println("Calculating results...")
 	results := make([]Result, 0, len(columns)*len(rows))
 	for _, col := range columns {
 		for _, row := range rows {
