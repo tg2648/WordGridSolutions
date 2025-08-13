@@ -272,10 +272,20 @@ func main() {
 	doc, err := html.Parse(strings.NewReader(pageHtml))
 	check(err)
 
-	var spans []string
+	var appGameNode *html.Node
 	for n := range doc.Descendants() {
+		if n.Type == html.ElementNode && n.Data == "app-game" {
+			appGameNode = n
+			break
+		}
+	}
+
+	var spans []string
+	for n := range appGameNode.Descendants() {
 		if n.Type == html.ElementNode && n.Data == atom.Span.String() {
-			spans = append(spans, getText(n))
+			var spanText = getText(n)
+			fmt.Printf("Found span: %q\n", spanText)
+			spans = append(spans, spanText)
 		}
 	}
 
@@ -334,5 +344,4 @@ func main() {
 		fmt.Println("Press Enter to continue...")
 		fmt.Scanln() // Wait for user to press Enter
 	}
-
 }
