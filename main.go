@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/go-rod/rod"
 	"golang.org/x/net/html"
@@ -258,7 +257,7 @@ func parsePredicate(predicate string) func(word string) bool {
 	}
 }
 
-func getSolutions() {
+func getSolutions() []Result {
 	fmt.Println("Connecting to wordgrid...")
 	page := rod.New().MustConnect().NoDefaultDevice().MustPage("https://wordgrid.clevergoat.com/")
 	pageHtml := page.MustWaitStable().MustHTML()
@@ -328,38 +327,51 @@ func getSolutions() {
 		}
 	}
 
-	for {
-		for i, res := range results {
-			fmt.Printf("%d) %s; words found: %d\n", i+1, res.Name, len(res.Words))
-		}
-		fmt.Println()
+	// for {
+	// 	for i, res := range results {
+	// 		fmt.Printf("%d) %s; words found: %d\n", i+1, res.Name, len(res.Words))
+	// 	}
+	// 	fmt.Println()
 
-		var selection int
-		fmt.Printf("Select a result (1-%d) or 0 to exit: ", len(results))
-		fmt.Scanf("%d", &selection)
+	// 	var selection int
+	// 	fmt.Printf("Select a result (1-%d) or 0 to exit: ", len(results))
+	// 	fmt.Scanf("%d", &selection)
 
-		if selection < 0 || selection > len(results) {
-			fmt.Println("Invalid selection. Exiting.")
-			break
-		}
-		if selection == 0 {
-			fmt.Println("Exiting.")
-			break
-		}
-		selectedResult := results[selection-1]
-		fmt.Println(prettyPrint(selectedResult.Words, 5))
-		fmt.Println(selectedResult.Name)
-		fmt.Println("Press Enter to continue...")
-		fmt.Scanln() // Wait for user to press Enter
-	}
+	// 	if selection < 0 || selection > len(results) {
+	// 		fmt.Println("Invalid selection. Exiting.")
+	// 		break
+	// 	}
+	// 	if selection == 0 {
+	// 		fmt.Println("Exiting.")
+	// 		break
+	// 	}
+	// 	selectedResult := results[selection-1]
+	// 	fmt.Println(prettyPrint(selectedResult.Words, 5))
+	// 	fmt.Println(selectedResult.Name)
+	// 	fmt.Println("Press Enter to continue...")
+	// 	fmt.Scanln() // Wait for user to press Enter
+	// }
+
+	return results
 }
 
 func main() {
-	fmt.Println("Hello")
-	// Replace "{# placeholder #}" in ./web/index.html with current date and time
+	results := getSolutions()
+
+	var outputBuilder strings.Builder
+	for _, res := range results {
+		outputBuilder.WriteString("<p>")
+		outputBuilder.WriteString("<b>")
+		outputBuilder.WriteString(fmt.Sprintf("%s -- words found: %d\n", res.Name, len(res.Words)))
+		outputBuilder.WriteString("</b>")
+		outputBuilder.WriteString(prettyPrint(res.Words, 5))
+		outputBuilder.WriteString("</p>")
+	}
+	fmt.Println()
+
+	// Replace "{# placeholder #}" in ./web/index.html with solutions
 	rawHtml, err := os.ReadFile("./web/index.html")
 	check(err)
-	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", time.Now().UTC().String())), 0644)
+	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", outputBuilder.String())), 0644)
 	check(err)
-	getSolutions()
 }
