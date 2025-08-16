@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: '1.24'
       - name: Build
-        run: go run main.go
+        run: go build && ./WordGridSolutions
 
       - name: Set up Node
         uses: actions/setup-node@v4
