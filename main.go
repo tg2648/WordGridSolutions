@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-rod/rod"
 	"golang.org/x/net/html"
@@ -355,9 +356,9 @@ func getSolutions() {
 
 func main() {
 	fmt.Println("Hello")
-	// Replace "{# placeholder #}" in ./web/index.html with "Hello, World!"
+	// Replace "{# placeholder #}" in ./web/index.html with current date and time
 	rawHtml, err := os.ReadFile("./web/index.html")
 	check(err)
-	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", "Hello, World!")), 0644)
+	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", time.Now().UTC().String())), 0644)
 	check(err)
 }
