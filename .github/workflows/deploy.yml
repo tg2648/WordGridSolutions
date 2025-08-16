@@ -39,6 +39,7 @@ jobs:
         with:
           node-version: lts/*
           cache: 'npm'
+        working-directory: ./web
 
       - name: Install web dependencies
         run: npm ci
