@@ -23,8 +23,10 @@ type Predicate struct {
 }
 
 type Result struct {
-	Name  string
-	Words []string
+	Name       string
+	Condition1 string
+	Condition2 string
+	Words      []string
 }
 
 // Returns a function that checks if a word starts with the given prefix.
@@ -255,7 +257,7 @@ func parsePredicate(predicate string) func(word string) bool {
 	}
 }
 
-func main() {
+func getSolutions() {
 	fmt.Println("Connecting to wordgrid...")
 	page := rod.New().MustConnect().NoDefaultDevice().MustPage("https://wordgrid.clevergoat.com/")
 	pageHtml := page.MustWaitStable().MustHTML()
@@ -316,7 +318,12 @@ func main() {
 				}
 			}
 			resultName := fmt.Sprintf("%s & %s", col.Name, row.Name)
-			results = append(results, Result{Name: resultName, Words: filtered})
+			results = append(results, Result{
+				Name:       resultName,
+				Condition1: col.Name,
+				Condition2: row.Name,
+				Words:      filtered,
+			})
 		}
 	}
 
@@ -344,4 +351,13 @@ func main() {
 		fmt.Println("Press Enter to continue...")
 		fmt.Scanln() // Wait for user to press Enter
 	}
+}
+
+func main() {
+	fmt.Println("Hello")
+	// Replace "{# placeholder #}" in ./web/index.html with "Hello, World!"
+	rawHtml, err := os.ReadFile("./web/index.html")
+	check(err)
+	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", "Hello, World!")), 0644)
+	check(err)
 }
