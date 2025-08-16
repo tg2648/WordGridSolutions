@@ -306,7 +306,7 @@ func getSolutions() {
 	fmt.Println("Loading dictionary...")
 	raw_words, err := os.ReadFile("words.txt")
 	check(err)
-	words := strings.Split(string(raw_words), "\n")
+	words := strings.Split(strings.ReplaceAll(string(raw_words), "\r\n", "\n"), "\n")
 
 	fmt.Println("Calculating results...")
 	results := make([]Result, 0, len(columns)*len(rows))
@@ -361,4 +361,5 @@ func main() {
 	check(err)
 	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", time.Now().UTC().String())), 0644)
 	check(err)
+	getSolutions()
 }
