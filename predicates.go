@@ -192,6 +192,10 @@ func parsePredicate(predicate string) func(word string) bool {
 		default:
 			panic("Cannot parse number: " + num)
 		}
+	case predicate == "infinity":
+		return func(word string) bool {
+			return true
+		}
 	default:
 		panic("Cannot parse predicate: " + predicate)
 	}
