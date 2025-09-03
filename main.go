@@ -16,40 +16,10 @@ func check(err error) {
 }
 
 type Result struct {
-	Name       string
-	Condition1 string
-	Condition2 string
-	Words      []string
-}
-
-// Returns the array of words in a three-column formatted string.
-func prettyPrint(words []string, columns int) string {
-	if len(words) == 0 {
-		fmt.Println("No words found.")
-		return ""
-	}
-
-	maxLength := 0
-	for _, word := range words {
-		if len(word) > maxLength {
-			maxLength = len(word)
-		}
-	}
-
-	rows := (len(words) + columns - 1) / columns // Calculate number of rows needed
-	var sb strings.Builder
-
-	for i := range rows {
-		for j := range columns {
-			index := i + j*rows
-			if index < len(words) {
-				fmt.Fprintf(&sb, "%-*s  ", maxLength, words[index])
-			}
-		}
-		sb.WriteString("\n")
-	}
-
-	return sb.String()
+	Name       string   `json:"name"`
+	Condition1 string   `json:"condition_1"`
+	Condition2 string   `json:"condition_2"`
+	Words      []string `json:"words"`
 }
 
 func getSolutions(row_predicates, col_predicates []Predicate) []Result {
@@ -68,6 +38,7 @@ func getSolutions(row_predicates, col_predicates []Predicate) []Result {
 					filtered = append(filtered, w)
 				}
 			}
+
 			resultName := fmt.Sprintf("%s & %s", col.Name, row.Name)
 			results = append(results, Result{
 				Name:       resultName,
@@ -88,8 +59,9 @@ var START_GAME_NUMBER_DATE = time.Date(2025, 8, 16, 0, 0, 0, 0, time.UTC)
 func getGameNumber() int {
 	now := time.Now().UTC()
 	diff := now.Sub(START_GAME_NUMBER_DATE)
+	diffDays := int(diff.Hours() / 24)
 
-	return START_GAME_NUMBER + int(diff.Hours()/24)
+	return START_GAME_NUMBER + diffDays
 }
 
 func getPredicates() ([]Predicate, []Predicate) {
@@ -137,20 +109,23 @@ func main() {
 	rowPredicates, colPredicates := getPredicates()
 	results := getSolutions(rowPredicates, colPredicates)
 
-	var outputBuilder strings.Builder
-	for _, res := range results {
-		outputBuilder.WriteString("<p>")
-		outputBuilder.WriteString("<b>")
-		outputBuilder.WriteString(fmt.Sprintf("%s -- words found: %d\n", res.Name, len(res.Words)))
-		outputBuilder.WriteString("</b>")
-		outputBuilder.WriteString(prettyPrint(res.Words, 5))
-		outputBuilder.WriteString("</p>")
+	// Add timestamp to results data
+	type ResultsData struct {
+		GameNumber int       `json:"game_number"`
+		Timestamp  time.Time `json:"timestamp"`
+		Results    []Result  `json:"results"`
 	}
-	fmt.Println()
 
-	// Replace "{# placeholder #}" in ./web/index.html with solutions
-	rawHtml, err := os.ReadFile("./web/index.html")
+	resultsData := ResultsData{
+		GameNumber: getGameNumber(),
+		Timestamp:  time.Now().UTC(),
+		Results:    results,
+	}
+
+	// Write results to a JSON file
+	jsonData, err := json.MarshalIndent(resultsData, "", "  ")
 	check(err)
-	err = os.WriteFile("./web/index.html", []byte(strings.ReplaceAll(string(rawHtml), "{# placeholder #}", outputBuilder.String())), 0644)
+	err = os.WriteFile("./web/src/results.json", jsonData, 0644)
 	check(err)
+	fmt.Println("Results written to ./web/src/results.json")
 }
