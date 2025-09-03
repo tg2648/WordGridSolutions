@@ -2,14 +2,65 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vite App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    #results {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .row-header,
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal-list {
+      font-family: monospace;
+    }
+  </style>
+  <title>WordGrid Solutions</title>
 </head>
 
-<body>
-  <div id="app">{# placeholder #}</div>
+<body class="container">
+  <header>
+    <h1>WordGrid Solutions</h1>
+    <p>
+      This page displays the solutions to the <a href="https://wordgrid.clevergoat.com">WordGrid</a> puzzles, updated
+      nightly.
+      The solutions shown here use the <a href="https://www.freescrabbledictionary.com/sowpods/">SOWPODS</a> word list
+      and may not match the "official" solutions.
+    </p>
+  </header>
+
+  <h2 id="game-info"></h2>
+  <main id="results"></main>
+  <dialog id="modal">
+    <article>
+      <header>
+        <button id="modal-close" aria-label="Close" rel="prev"></button>
+        <p>
+          <strong id="modal-title"></strong>
+        </p>
+      </header>
+      <div role="group">
+        <button id="modal-sort-1" class="outline">Sort alphabetically</button>
+        <button id="modal-sort-2" class="outline">Sort by length</button>
+      </div>
+      <ul id="modal-list">
+      </ul>
+    </article>
+  </dialog>
+
+  <footer>
+    Source code:
+    <a href="https://github.com/tg2648/WordGridSolutions">https://github.com/tg2648/WordGridSolutions</a>
+  </footer>
   <script type="module" src="/src/main.js"></script>
 </body>
 
