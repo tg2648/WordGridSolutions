@@ -20,7 +20,7 @@
 			"installOhMyZsh": true,
 			"installOhMyZshConfig": true,
 			"upgradePackages": true,
-			"username": "devcontainer",
+			"username": "automatic",
 			"userUid": "automatic",
 			"userGid": "automatic"
 		}
